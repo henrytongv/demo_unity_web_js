@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<!-- lang="en-us"-->
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity Web | Unity_TicTacToe</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/style.css">
+
+  <style>
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+
+  </head>
+  <body>
+
+  <div class="sr-only">
+
+    <!-- Estos controles no se ven en la pantalla porque estamos dentro de un div "sr-only" -->
+
+    <div id="demoarialive" aria-live="assertive" aria-atomic="true"></div>
+
+    <button id="button0" onclick="markPosition(0)">fila superior columna izquierda sin marcar</button>
+    <button id="button1" onclick="markPosition(1)">fila superior columna central sin marcar</button>
+    <button id="button2" onclick="markPosition(2)">fila superior columna derecha sin marcar</button>
+
+    <button id="button3" onclick="markPosition(3)">fila central columna derecha sin marcar</button>
+    <button id="button4" onclick="markPosition(4)">fila central columna derecha sin marcar</button>
+    <button id="button5" onclick="markPosition(5)">fila central columna derecha sin marcar</button>
+
+    <button id="button6" onclick="markPosition(6)">fila inferior columna derecha sin marcar</button>
+    <button id="button7" onclick="markPosition(7)">fila inferior columna derecha sin marcar</button>
+    <button id="button8" onclick="markPosition(8)">fila inferior columna derecha sin marcar</button>
+
+  </div>
+
+    <div id="unity-container" class="unity-desktop">
+      <canvas id="unity-canvas" width=960 height=600></canvas>
+      <div id="unity-loading-bar">
+        <div id="unity-logo"></div>
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
+        </div>
+      </div>
+      <div id="unity-warning"> </div>
+      <div id="unity-footer">
+        <div id="unity-webgl-logo"></div>
+        <div id="unity-fullscreen-button"></div>
+        <div id="unity-build-title">Unity_TicTacToe</div>
+      </div>
+    </div>
+    <script>
+
+	  var  unityGame;
+
+      var container = document.querySelector("#unity-container");
+      var canvas = document.querySelector("#unity-canvas");
+      var loadingBar = document.querySelector("#unity-loading-bar");
+      var progressBarFull = document.querySelector("#unity-progress-bar-full");
+      var fullscreenButton = document.querySelector("#unity-fullscreen-button");
+      var warningBanner = document.querySelector("#unity-warning");
+
+      // Shows a temporary message banner/ribbon for a few seconds, or
+      // a permanent error message on top of the canvas if type=='error'.
+      // If type=='warning', a yellow highlight color is used.
+      // Modify or remove this function to customize the visually presented
+      // way that non-critical warnings and error messages are presented to the
+      // user.
+      function unityShowBanner(msg, type) {
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        }
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: red; padding: 10px;';
+        else {
+          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+          setTimeout(function() {
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
+        }
+        updateBannerVisibility();
+      }
+
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/u_tic_dist_es.loader.js";
+      var config = {
+        dataUrl: buildUrl + "/u_tic_dist_es.data",
+        frameworkUrl: buildUrl + "/u_tic_dist_es.framework.js",
+        codeUrl: buildUrl + "/u_tic_dist_es.wasm",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "Unity_TicTacToe",
+        productVersion: "1.0",
+        showBanner: unityShowBanner,
+      };
+
+      // By default Unity keeps WebGL canvas render target size matched with
+      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+      // Set this to false if you want to decouple this synchronization from
+      // happening inside the engine, and you would instead like to size up
+      // the canvas DOM size and WebGL render target sizes yourself.
+      // config.matchWebGLToCanvasSize = false;
+
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        // Mobile device style: fill the whole browser client area with the game canvas:
+
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+        container.className = "unity-mobile";
+
+        // To lower canvas resolution on mobile devices to gain some
+        // performance, uncomment the following line:
+        // config.devicePixelRatio = 1;
+
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
+
+        unityShowBanner('WebGL builds are not supported on mobile devices.');
+      } else {
+        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
+
+        canvas.style.width = "960px";
+        canvas.style.height = "600px";
+      }
+
+      loadingBar.style.display = "block";
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          progressBarFull.style.width = 100 * progress + "%";
+        }).then((unityInstance) => {
+		  unityGame = unityInstance;
+          loadingBar.style.display = "none";
+          fullscreenButton.onclick = () => {
+            unityInstance.SetFullscreen(1);
+          };
+        }).catch((message) => {
+          alert(message);
+        });
+      };
+      document.body.appendChild(script);
+    </script>
+
+<script>
+
+      // esta función es invocada desde Unity C Sharp
+      function sendMessage(message) {
+        document.getElementById("demoarialive").innerHTML = message;
+      }
+
+      function markPosition(pos) {
+        console.log("markPosition at " + pos);
+
+        // invocando a una función de Unity C sharp
+        unityGame.SendMessage( "Board", "MyCustomHit", pos );
+      }
+
+      // esta función es invocada desde Unity C Sharp
+      function changeButtonLabel(buttonId, buttonLabel) {
+        console.log("changeButtonLabel at " + buttonId + " " + buttonLabel);
+		    btn = document.getElementById("button" + buttonId);
+        btn.textContent = buttonLabel;
+      }
+</script>
+  </body>
+</html>
